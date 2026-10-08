@@ -42,7 +42,7 @@ Any tool without an explicit grant is automatically blocked.
 
 ## License
 
-PolyForm Shield License 1.0.0. Source-available.
+MIT License. See LICENSE.
 
 ## Links
 
