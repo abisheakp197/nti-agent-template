@@ -12,9 +12,9 @@ Get started:
 
 import os
 import sys
-from dotenv import load_dotenv
 
 import ube_foundation
+from dotenv import load_dotenv
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
@@ -24,11 +24,7 @@ from openai import OpenAIError
 
 # Patch ube_foundation.PqcKeyPair if .generate() method is missing
 if not hasattr(ube_foundation.PqcKeyPair, "generate"):
-    setattr(
-        ube_foundation.PqcKeyPair,
-        "generate",
-        staticmethod(ube_foundation.PqcKeyPair),
-    )
+    ube_foundation.PqcKeyPair.generate = staticmethod(ube_foundation.PqcKeyPair)
 
 load_dotenv()
 
