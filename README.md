@@ -14,7 +14,7 @@ Every tool call is cryptographically verified before execution using all 5 pilla
 ```bash
 git clone https://github.com/abisheakp197/nti-agent-template.git my-agent
 cd my-agent
-pip install -r requirements.txt
+pip install -e .
 cp .env.example .env
 # Add your OPENAI_API_KEY to .env
 python agent.py
@@ -22,10 +22,10 @@ python agent.py
 
 ## What Just Happened
 
-When you ran `python agent.py`, two things occurred:
+When you run `python agent.py`, two things occur:
 
-1. Allowed action: `execute_transfer` was granted as a capability, so the transfer succeeded.
-2. Blocked action: NTI raised `PermissionError` before the unauthorized tool ran.
+1. Allowed action: `execute_transfer` was granted as a capability, so the transfer succeeds.
+2. Blocked action: NTI raises `PermissionError` before any unauthorized tool runs.
 
 This is the core value: agents cannot execute unauthorized actions, even if compromised at the prompt level.
 
@@ -40,9 +40,24 @@ nti_handler.grant_capability("read_database")
 
 Any tool without an explicit grant is automatically blocked.
 
+## Testing & Linting
+
+Run tests and static analysis with:
+
+```bash
+pip install -e .[dev]
+pytest
+ruff check .
+mypy --strict agent.py tests/test_agent.py
+```
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for security policies, disclosure procedures, and architectural details of NTI capability enforcement.
+
 ## License
 
-MIT License. See LICENSE.
+MIT License. See [LICENSE](LICENSE).
 
 ## Links
 

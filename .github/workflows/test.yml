@@ -15,7 +15,13 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -e .[dev]
+      - name: Run Ruff
+        run: ruff check .
+      - name: Run Mypy
+        run: mypy --strict agent.py tests/test_agent.py
+      - name: Run Tests
+        run: pytest
       - name: Verify imports
         run: |
           python -c "import langchain_nti; print('NTI loaded')"

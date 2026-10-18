@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nti-agent-template"
+version = "0.1.0"
+description = "Starter template for LangChain AI agents secured with NTI"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "ube-foundation>=0.1.0",
+    "langchain>=0.3.0,<1.0.0",
+    "langchain-nti>=0.1.1",
+    "langchain-openai>=0.2.0,<0.3.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "mypy>=1.0.0",
+    "ruff>=0.1.0",
+]
+
+[tool.setuptools]
+py-modules = ["agent"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.mypy]
+strict = true
+python_version = "3.10"
+
+[[tool.mypy.overrides]]
+module = [
+    "langchain_nti.*",
+    "ube_foundation.*",
+]
+ignore_missing_imports = true
