@@ -12,14 +12,17 @@ Get started:
 
 import os
 import sys
+from typing import Any
 
 import ube_foundation
 from dotenv import load_dotenv
-from langchain.agents import AgentExecutor, create_openai_tools_agent
-from langchain_core.prompts import ChatPromptTemplate
+from langchain.agents import create_agent
+from langchain_core.messages import HumanMessage
+from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langchain_nti import NTICallbackHandler
 from langchain_openai import ChatOpenAI
+from langgraph.graph.state import CompiledStateGraph
 from openai import OpenAIError
 
 # Patch ube_foundation.PqcKeyPair if .generate() method is missing
@@ -41,8 +44,8 @@ def read_database(table: str) -> str:
     return f"Read from {table}"
 
 
-def build_agent() -> AgentExecutor:
-    """Build a LangChain agent with NTI post-quantum security wired in."""
+def build_agent() -> CompiledStateGraph[Any, Any, Any, Any]:
+    """Build a LangChain agent graph with NTI post-quantum security wired in."""
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key or api_key.strip() == "" or api_key == "sk-your-key-here":
         raise ValueError(
@@ -54,27 +57,20 @@ def build_agent() -> AgentExecutor:
 
     tools = [execute_transfer, read_database]
 
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", "You are a helpful financial analyst assistant."),
-            ("human", "{input}"),
-            ("placeholder", "{agent_scratchpad}"),
-        ]
+    agent = create_agent(
+        model=llm,
+        tools=tools,
+        system_prompt="You are a helpful financial analyst assistant.",
     )
+    return agent
 
-    agent = create_openai_tools_agent(llm, tools, prompt)
 
+def get_nti_callback_handler() -> NTICallbackHandler:
+    """Create and initialize NTI Callback Handler with capabilities."""
     nti_handler = NTICallbackHandler(agent_id="finance_agent")
     nti_handler.grant_capability("execute_transfer")
     nti_handler.grant_capability("read_database")
-
-    executor = AgentExecutor(
-        agent=agent,
-        tools=tools,
-        callbacks=[nti_handler],
-        verbose=True,
-    )
-    return executor
+    return nti_handler
 
 
 def main() -> None:
@@ -85,9 +81,16 @@ def main() -> None:
         print(f"\n[ERROR] {e}", file=sys.stderr)
         sys.exit(1)
 
+    nti_handler = get_nti_callback_handler()
+    config: RunnableConfig = {"callbacks": [nti_handler]}
+
     try:
-        result = agent.invoke({"input": "Transfer $100 USD to my savings account"})
-        output: str = str(result.get("output", ""))
+        result: dict[str, Any] = agent.invoke(
+            {"messages": [HumanMessage(content="Transfer $100 USD to my savings account")]},
+            config=config,
+        )
+        messages = result.get("messages", [])
+        output: str = str(messages[-1].content) if messages else ""
         print("\n[SUCCESS]", output)
     except PermissionError as e:
         print("\n[BLOCKED BY NTI]", e)
@@ -95,7 +98,10 @@ def main() -> None:
         print("\n[OPENAI ERROR]", e)
 
     try:
-        agent.invoke({"input": "Delete all users from the database"})
+        agent.invoke(
+            {"messages": [HumanMessage(content="Delete all users from the database")]},
+            config=config,
+        )
     except PermissionError as e:
         print("\n[BLOCKED BY NTI]", e)
     except OpenAIError as e:

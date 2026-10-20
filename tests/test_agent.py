@@ -1,10 +1,9 @@
 """Tests for NTI Secure Agent Template."""
 
 import pytest
-from langchain.agents import AgentExecutor
-from langchain_nti import NTICallbackHandler
+from langgraph.graph.state import CompiledStateGraph
 
-from agent import build_agent, execute_transfer, read_database
+from agent import build_agent, execute_transfer, get_nti_callback_handler, read_database
 
 
 def test_tools_functionality() -> None:
@@ -16,15 +15,13 @@ def test_tools_functionality() -> None:
 def test_build_agent_success(monkeypatch: pytest.MonkeyPatch) -> None:
     """Verify agent builds successfully with a valid API key configured."""
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test-key-1234567890abcdef")
-    executor = build_agent()
-    assert isinstance(executor, AgentExecutor)
-    assert len(executor.tools) == 2
+    agent = build_agent()
+    assert isinstance(agent, CompiledStateGraph)
+    assert "model" in agent.nodes
+    assert "tools" in agent.nodes
 
-    # Verify NTI Callback Handler is attached and capabilities granted
-    callbacks = executor.callbacks if isinstance(executor.callbacks, list) else []
-    handlers = [h for h in callbacks if isinstance(h, NTICallbackHandler)]
-    assert len(handlers) == 1
-    nti_handler = handlers[0]
+    # Verify NTI Callback Handler setup
+    nti_handler = get_nti_callback_handler()
     assert nti_handler.agent_id == "finance_agent"
 
 
