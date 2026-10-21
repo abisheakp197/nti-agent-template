@@ -64,3 +64,53 @@ MIT License. See [LICENSE](LICENSE).
 - Core SDK: https://pypi.org/project/ube-foundation/
 - LangChain wrapper: https://pypi.org/project/langchain-nti/
 - Homepage: https://abisheakp197.github.io/Neutral-Trust-Infrastructure/
+
+## Architecture
+
+```mermaid
+graph TD
+    subgraph DevWorkspace["Developer Workspace"]
+        AgentCode["Agent Setup<br/>(build_agent)"]
+        ToolDefs["Tool Definitions<br/>(execute_transfer, read_database)"]
+        CapGrants["Capability Grants<br/>(grant_capability)"]
+    end
+
+    subgraph LangChainExec["LangChain Execution"]
+        GraphExec["CompiledStateGraph / AgentExecutor"]
+        ToolCall["Tool Call Request"]
+        ToolExec["Tool Execution"]
+        AgentResult["Verified Output / State Update"]
+    end
+
+    subgraph NTILayer["NTI Security Layer"]
+        NTIHandler["NTICallbackHandler<br/>(on_tool_start)"]
+        TrustEngine["TrustEngine<br/>(Capability & Audit Chain)"]
+        FailClosed["Fail-Closed Enforcement<br/>(Allow / PermissionError)"]
+    end
+
+    subgraph CryptoEngine["Crypto Engine"]
+        PqcKeyPair["PqcKeyPair<br/>(NIST PQC Standards)"]
+        Dilithium5["Dilithium5<br/>(Post-Quantum Signatures)"]
+        Kyber1024["Kyber1024<br/>(Post-Quantum KEM)"]
+    end
+
+    AgentCode -->|"1. Configures Agent Graph"| GraphExec
+    ToolDefs -->|"2. Registers Tools"| GraphExec
+    CapGrants -->|"3. Grants Capabilities"| NTIHandler
+
+    GraphExec -->|"4. Invokes Tool Action"| ToolCall
+    ToolCall -->|"5. Intercepts Execution"| NTIHandler
+
+    NTIHandler -->|"6. Requests Signature"| PqcKeyPair
+    PqcKeyPair --- Dilithium5
+    PqcKeyPair --- Kyber1024
+    PqcKeyPair -->|"7. Signs Action Payload"| NTIHandler
+
+    NTIHandler -->|"8. Evaluates Signed Request"| TrustEngine
+    TrustEngine -->|"9. Action Decision"| FailClosed
+
+    FailClosed -->|"10a. ALLOW: Execute Tool"| ToolExec
+    FailClosed -->|"10b. DENY: Raise PermissionError"| GraphExec
+    ToolExec -->|"11. Return Output"| AgentResult
+    AgentResult -->|"12. Return Verified Result"| GraphExec
+```
