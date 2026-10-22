@@ -1,3 +1,5 @@
+[![NTI Verified](https://img.shields.io/badge/NTI_Score-100%2F100-brightgreen)](https://nti-registry.vercel.app)
+
 # NTI Secure Agent Template
 
 A minimal working AI agent with **NTI (Neutral Trust Infrastructure)** post-quantum security pre-installed.
